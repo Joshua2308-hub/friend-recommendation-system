@@ -1,0 +1,1 @@
+const key='friendgraph.user';export const state={user:JSON.parse(localStorage.getItem(key)||'null'),sample:false};export function setUser(user){state.user=user;localStorage.setItem(key,JSON.stringify(user))}export function clearUser(){state.user=null;localStorage.removeItem(key)}

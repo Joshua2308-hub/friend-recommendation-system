@@ -1,0 +1,11 @@
+#include "graph.h"
+#include <stdlib.h>
+#include <string.h>
+/* O(1) */ void graph_init(Graph*g){g->adj=NULL;g->n=g->cap=0;}
+/* O(V+E) */ void graph_free(Graph*g){if(!g)return;for(size_t i=0;i<g->n;i++)free(g->adj[i].items);free(g->adj);graph_init(g);}
+/* Amortized O(1) */ int add_user(Graph*g){if(g->n==g->cap){size_t c=g->cap?g->cap*2:8;NeighborList*p=realloc(g->adj,c*sizeof(*p));if(!p)return -1;g->adj=p;g->cap=c;}g->adj[g->n]=(NeighborList){0};return (int)g->n++;}
+/* O(deg(a)+deg(b)) */ int are_friends(const Graph*g,int a,int b){if(!g||a<0||b<0||(size_t)a>=g->n||(size_t)b>=g->n)return 0;for(size_t i=0;i<g->adj[a].len;i++)if(g->adj[a].items[i]==b)return 1;return 0;}
+/* Amortized O(deg(a)+deg(b)) */ int add_edge(Graph*g,int a,int b){if(a==b||!g||a<0||b<0||(size_t)a>=g->n||(size_t)b>=g->n||are_friends(g,a,b))return 0;NeighborList*x=&g->adj[a],*y=&g->adj[b];if(x->len==x->cap){size_t c=x->cap?x->cap*2:4;int*p=realloc(x->items,c*sizeof(int));if(!p)return -1;x->items=p;x->cap=c;}if(y->len==y->cap){size_t c=y->cap?y->cap*2:4;int*p=realloc(y->items,c*sizeof(int));if(!p)return -1;y->items=p;y->cap=c;}x->items[x->len++]=b;y->items[y->len++]=a;return 1;}
+/* O(deg(a)+deg(b)) */ int remove_edge(Graph*g,int a,int b){if(!are_friends(g,a,b))return 0;int ends[2]={a,b};for(int k=0;k<2;k++){NeighborList*x=&g->adj[ends[k]];int v=ends[1-k];for(size_t i=0;i<x->len;i++)if(x->items[i]==v){x->items[i]=x->items[--x->len];break;}}return 1;}
+/* O(d1 log d1 + d2 log d2) */ static int cmp_int(const void*a,const void*b){int x=*(const int*)a,y=*(const int*)b;return (x>y)-(x<y);}
+/* O(d1 log d1 + d2 log d2), sorted two-pointer intersection */ size_t mutual_friends(const Graph*g,int a,int b,int*out,size_t cap){if(!g||a<0||b<0||(size_t)a>=g->n||(size_t)b>=g->n)return 0;NeighborList x=g->adj[a],y=g->adj[b];int*p=malloc((x.len?x.len:1)*sizeof(int)),*q=malloc((y.len?y.len:1)*sizeof(int));if(!p||!q){free(p);free(q);return 0;}if(x.len)memcpy(p,x.items,x.len*sizeof(int));if(y.len)memcpy(q,y.items,y.len*sizeof(int));qsort(p,x.len,sizeof(int),cmp_int);qsort(q,y.len,sizeof(int),cmp_int);size_t i=0,j=0,n=0;while(i<x.len&&j<y.len){if(p[i]==q[j]){if(out&&n<cap)out[n]=p[i];n++;i++;j++;}else if(p[i]<q[j])i++;else j++;}free(p);free(q);return n;}
