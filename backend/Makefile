@@ -14,7 +14,7 @@ TEST_GRAPH = test_graph
 TEST_RECOMMEND = test_recommend
 RUN_PREFIX = ./
 endif
-.PHONY: all test run clean
+.PHONY: all test smoke run clean
 all: $(TARGET)
 $(TARGET): $(APP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(APP) $(LDLIBS)
@@ -32,8 +32,11 @@ test: test_graph test_recommend
 	$(RUN_PREFIX)$(TEST_GRAPH)
 	$(RUN_PREFIX)$(TEST_RECOMMEND)
 endif
+smoke: all
+	node tests/smoke.mjs
 run: all
 	$(RUN_PREFIX)$(TARGET)
 clean:
 	-del /Q test_graph.exe test_recommend.exe friendgraph.exe 2>NUL
 	-rm -f test_graph test_recommend friendgraph
+
